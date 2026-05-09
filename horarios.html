@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPAP - Horário de Aula</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========================================================
+           RESET E BASE
+           ======================================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        
+        body {
+            background-color: #EFEFEF; 
+            display: flex;
+            justify-content: center;
+            overflow: hidden; 
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 414px; 
+            min-height: 100vh;
+            background-color: #FCF4F5; 
+            position: relative;
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.1);
+            overflow: hidden; 
+        }
+
+        /* ========================================================
+           HEADER
+           ======================================================== */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 20px 10px 20px;
+        }
+        
+        .header-title { font-size: 18px; font-weight: 400; color: #3A3131; letter-spacing: 0.5px; }
+        .header-icons { display: flex; gap: 15px; align-items: center; }
+        .icon-btn { background: none; border: none; cursor: pointer; color: #3A3131; display: flex; align-items: center; }
+
+        /* ========================================================
+           CONTEÚDO DA PÁGINA
+           ======================================================== */
+        .content { 
+            padding: 10px 20px 100px 20px; 
+            height: calc(100vh - 60px);
+            overflow-y: auto; 
+        }
+
+        .disclaimer { 
+            font-size: 10px; font-style: italic; color: #555; text-align: center; 
+            margin-bottom: 15px; line-height: 1.4; padding: 0 5px; 
+        }
+
+        .search-box {
+            background-color: #F3E6E8; border-radius: 12px; padding: 12px 15px;
+            display: flex; align-items: center; gap: 12px; margin-bottom: 25px;
+        }
+        .search-box input { border: none; background: transparent; width: 100%; font-size: 13px; color: #3A3131; outline: none; }
+        .search-box input::placeholder { color: #888; }
+
+        /* ========================================================
+           TABELA DE HORÁRIOS
+           ======================================================== */
+        .schedule-table { display: flex; flex-direction: column; gap: 6px; }
+        
+        .row { 
+            display: grid; grid-template-columns: 40px 1fr 45px 20px; 
+            align-items: center; padding: 14px 10px; border-radius: 8px; gap: 8px; 
+        }
+        
+        .row-header { font-size: 12px; font-weight: 600; color: #333; padding-bottom: 5px; padding-top: 0;}
+        .row-data { font-size: 11px; color: #444; }
+        .row-data.highlight { background-color: #F5E4E8; } /* Cor rosa clara das linhas intercaladas */
+        
+        .col-month { font-weight: 400; color: #4A3F3F; }
+        .col-subject { font-weight: 500; color: #3A3131; line-height: 1.3; }
+        .col-date { text-align: right; font-weight: 400; color: #4A3F3F; }
+        .col-icon { display: flex; justify-content: flex-end; align-items: center; color: #3A3131;}
+        
+        /* Ajuste do cabeçalho */
+        .header-exame { grid-column: span 2; text-align: right; padding-right: 5px;}
+
+        /* ========================================================
+           MENU INFERIOR (BOTTOM NAV)
+           ======================================================== */
+        .bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; background-color: #FCF4F5;
+            display: flex; justify-content: space-between; padding: 15px 15px 25px 15px; z-index: 20;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; color: #3A3131; width: 20%; }
+        .nav-icon { width: 60px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 16px; }
+        .nav-item.active .nav-icon { background-color: #F8B4C0; }
+        .nav-label { font-size: 8px; font-weight: 600; text-transform: uppercase;}
+
+        /* ========================================================
+           SIDEBAR DO PERFIL
+           ======================================================== */
+        .sidebar-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 1000;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        .profile-sidebar {
+            position: absolute; top: 0; right: -350px; 
+            width: 85%; max-width: 320px; height: 100%;
+            background-color: #FCF4F5; z-index: 1001;
+            transition: right 0.3s ease;
+            display: flex; flex-direction: column; padding: 60px 20px 20px 20px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+        .profile-sidebar.active { right: 0; }
+
+        .profile-card { background-color: #ffffff; border-radius: 16px; border: 1px solid #EBEBEB; overflow: hidden; margin-bottom: 20px; }
+        .profile-header-title { background-color: #F4F4F4; color: #555; text-align: center; font-size: 14px; font-weight: 500; padding: 15px; border-bottom: 1px solid #EBEBEB; }
+        .profile-info-section { padding: 15px; }
+        .info-grid { display: grid; grid-template-columns: 80px 1fr; gap: 8px; margin-bottom: 15px; font-size: 12px; }
+        .info-label { font-weight: 600; color: #444; }
+        .info-value { color: #555; text-transform: uppercase;}
+        .info-value.lowercase { text-transform: none; }
+        .profile-subheader { background-color: #EFEFEF; color: #333; text-align: center; font-size: 13px; font-weight: 600; padding: 10px; border-top: 1px solid #EBEBEB; border-bottom: 1px solid #EBEBEB; }
+        .profile-details-section { padding: 15px; }
+        .detail-grid { display: grid; grid-template-columns: 80px 1fr; gap: 8px; font-size: 12px; margin-bottom: 15px; }
+        .btn-cambiar { background: none; border: none; color: #7B113A; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; float: right; }
+
+        .sidebar-btn { display: flex; align-items: center; gap: 15px; background-color: #EBEBEB; color: #444; padding: 16px 20px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 12px; }
+        .sidebar-btn svg { fill: #555; width: 22px; height: 22px; }
+        .btn-logout { background-color: #ECA3AA; color: #333; font-weight: 600;}
+        .btn-logout svg { fill: #333; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <header class="header">
+            <button class="icon-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <h1 class="header-title">HORÁRIO DE CLASSE</h1>
+            <div class="header-icons">
+                <button class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"></path></svg>
+                </button>
+                <button class="icon-btn" onclick="openSidebar()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+            <p class="disclaimer">
+                * En caso de que alguna información no aparezca o no coincida, consulte a la secretaría académica de su sede."
+            </p>
+
+            <div class="search-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Procurar...">
+            </div>
+
+            <div class="schedule-table">
+                <div class="row row-header">
+                    <div class="col-month">Mês</div>
+                    <div class="col-subject">Assunto</div>
+                    <div class="col-date header-exame">Exame</div>
+                </div>
+
+                <div class="row row-data highlight">
+                    <div class="col-month">MAY</div>
+                    <div class="col-subject">ANATOMÍA HUMANA</div>
+                    <div class="col-date">31 May</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+                
+                <div class="row row-data">
+                    <div class="col-month">MAY</div>
+                    <div class="col-subject">HISTOLOGÍA Y EMBRIOLOGÍA</div>
+                    <div class="col-date">31 May</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data highlight">
+                    <div class="col-month">MAY</div>
+                    <div class="col-subject">BIOLOGÍA</div>
+                    <div class="col-date">31 May</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data">
+                    <div class="col-month">MAY</div>
+                    <div class="col-subject">COMUNICACIÓN ORAL</div>
+                    <div class="col-date">31 May</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data highlight">
+                    <div class="col-month">MAR</div>
+                    <div class="col-subject">ANATOMIA HUMANA</div>
+                    <div class="col-date">30 Mar</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data">
+                    <div class="col-month">MAR</div>
+                    <div class="col-subject">HISTOLOGÍA Y EMBRIOLOGÍA</div>
+                    <div class="col-date">30 Mar</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data highlight">
+                    <div class="col-month">MAR</div>
+                    <div class="col-subject">BIOLOGÍA</div>
+                    <div class="col-date">30 Mar</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data">
+                    <div class="col-month">MAR</div>
+                    <div class="col-subject">COMUNICACIÓN ORAL</div>
+                    <div class="col-date">30 Jun</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data highlight">
+                    <div class="col-month">MAY</div>
+                    <div class="col-subject">METODOLOGIA DE INVESTIGACIÓN</div>
+                    <div class="col-date">31 May</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+
+                <div class="row row-data">
+                    <div class="col-month">MAR</div>
+                    <div class="col-subject">METODOLOGIA DE INVESTIGACIÓN</div>
+                    <div class="col-date">31 Mar</div>
+                    <div class="col-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg></div>
+                <span class="nav-label">COMEÇAR</span>
+            </a>
+            <a href="notas.html" class="nav-item">
+                <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4" ry="4"></rect><polyline points="9 12 12 15 16 9"></polyline></svg></div>
+                <span class="nav-label">NOTAS</span>
+            </a>
+            <a href="pagos.html" class="nav-item">
+                <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="nav-label">PAGOS</span>
+            </a>
+            
+            <a href="horarios.html" class="nav-item active">
+                <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <span class="nav-label">HORÁRIOS</span>
+            </a>
+
+            <a href="pagamentos.html" class="nav-item">
+                <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="6" x2="12" y2="18"></line><path d="M15 9.5a2.5 2.5 0 0 0-5 0c0 1.5 5 1.5 5 3a2.5 2.5 0 0 1-5 0"></path></svg></div>
+                <span class="nav-label">PAGAMENTOS</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+        <nav id="profileSidebar" class="profile-sidebar">
+            <div class="profile-card">
+                <div class="profile-header-title">Alumno - 7456795</div>
+                <div class="profile-info-section">
+                    <div class="info-grid">
+                        <span class="info-label">Nombre</span><span class="info-value">AMARILLA OVELAR, EDGAR</span>
+                        <span class="info-label">Email</span><span class="info-value lowercase">ovelaredgar@gmail.com</span>
+                    </div>
+                </div>
+                <div class="profile-subheader">Inscripción Actual</div>
+                <div class="profile-details-section">
+                    <div class="detail-grid">
+                        <span class="info-label">Inscripción</span><span class="info-value">5-2026-1263</span>
+                        <span class="info-label">Carrera</span><span class="info-value">MEDICINA</span>
+                        <span class="info-label">Curso</span><span class="info-value">PRIMERO</span>
+                        <span class="info-label">Sede</span><span class="info-value">PEDRO JUAN CABALLERO</span>
+                        <span class="info-label">Estado</span><span class="info-value">ACTIVO - ALUMNOS EN GENERAL</span>
+                    </div>
+                    <div class="cambiar-container" style="display: flex; justify-content: flex-end;">
+                        <button class="btn-cambiar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Cambiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <a href="#" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Datos Personales</a>
+            <a href="#" class="sidebar-btn"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM2 6c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6zm7 3c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2zm5 5H6v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1zm4-5h-3v2h3V9zm0 3h-3v2h3v-2z"/></svg>Mi Carnet</a>
+            <a href="#" class="sidebar-btn btn-logout"><svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>CERRAR SESIÓN</a>
+        </nav>
+
+    </div>
+
+    <script>
+        function openSidebar() {
+            document.getElementById('profileSidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+        }
+        function closeSidebar() {
+            document.getElementById('profileSidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
